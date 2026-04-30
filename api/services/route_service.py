@@ -22,6 +22,7 @@ def geocode_location(location: str) -> Tuple[float, float]:
     if cached:
         return tuple(cached)
 
+    logger.info(f"Geocoding API call for: {location}")
     url = "https://api.openrouteservice.org/geocode/search"
     params = {
         'api_key': settings.ORS_API_KEY,

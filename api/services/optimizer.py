@@ -36,21 +36,21 @@ def find_optimal_fuel_stops(
         iteration += 1
         miles_to_destination = total_miles - current_miles
 
-        # Can we reach the destination without stopping?
+        
         if fuel_remaining_miles >= miles_to_destination:
             logger.debug(f"Can reach destination from mile {current_miles:.1f}")
             break
 
-        # Where are we on the route right now?
+        
         current_point = _get_point_at_mile(annotated, current_miles)
         if not current_point:
             logger.warning("Could not find route point — stopping optimization")
             break
 
-        # How far can we physically reach?
+        
         max_reachable_miles = current_miles + fuel_remaining_miles
 
-        # Find all stations reachable from current position
+        
         reachable_stations = _find_reachable_stations(
             annotated=annotated,
             nearby_stations=nearby_stations,
@@ -68,7 +68,7 @@ def find_optimal_fuel_stops(
                 f"the dataset doesn't cover this area."
             )
 
-        # Apply greedy-with-lookahead to pick best stop
+        
         chosen_stop = _select_best_stop(
             reachable_stations=reachable_stations,
             current_miles=current_miles,
@@ -76,15 +76,14 @@ def find_optimal_fuel_stops(
             vehicle_range=vehicle_range,
         )
 
-        # Calculate fuel consumed to reach the stop
+        
         miles_driven = chosen_stop['route_mile'] - current_miles
         gallons_consumed = miles_driven / mpg
         total_gallons += gallons_consumed
 
-        # Fill up completely at this stop
+       
         gallons_to_fill = (vehicle_range - (fuel_remaining_miles - miles_driven)) / mpg
-        # Actually: we arrive with (fuel_remaining - miles_driven) miles of fuel
-        # Fill to full (vehicle_range miles worth)
+
         fuel_on_arrival = fuel_remaining_miles - miles_driven
         gallons_filled = (vehicle_range - fuel_on_arrival) / mpg
         cost_at_stop = gallons_filled * chosen_stop['price']
@@ -112,14 +111,9 @@ def find_optimal_fuel_stops(
             f"cost ${cost_at_stop:.2f}"
         )
 
-        # Update state: we're now at the stop with a full tank
+        
         current_miles = chosen_stop['route_mile']
         fuel_remaining_miles = vehicle_range
-
-    # Final cost summary
-    # Add fuel cost for last segment (destination arrival)
-    # We don't count fuel we don't use, so final segment cost is already included
-    # via the fill-up logic above
 
     return {
         'fuel_stops': fuel_stops,
@@ -163,13 +157,13 @@ def _find_reachable_stations(
         )
         route_mile = nearest_point['miles']
 
-        # Must be ahead of us and within fuel range
-        if route_mile <= from_mile + 10:  # +10 to avoid re-stopping too close
+        
+        if route_mile <= from_mile + 10:  
             continue
         if route_mile > to_mile:
             continue
 
-        # Distance from current position to station (straight line + small detour factor)
+        
         dist_to_station = haversine(current_lat, current_lon, station['lat'], station['lon'])
 
         reachable.append({
@@ -194,12 +188,11 @@ def _select_best_stop(
 
     range_span = max_reachable_miles - current_miles
     near_half_cutoff = current_miles + (range_span * 0.5)
-    safety_cutoff = current_miles + (range_span * 0.8)  # must stop by here
+    safety_cutoff = current_miles + (range_span * 0.8)  
 
-    cheapest = reachable_stations[0]  # already sorted by price
+    cheapest = reachable_stations[0] 
 
-    # Safety mode: if even the cheapest is beyond safety cutoff,
-    # we must take whatever is nearest (shouldn't happen with good data)
+     
     stations_before_safety = [
         s for s in reachable_stations if s['route_mile'] <= safety_cutoff
     ]
@@ -209,11 +202,11 @@ def _select_best_stop(
 
     cheapest_before_safety = min(stations_before_safety, key=lambda s: s['price'])
 
-    # If cheapest is in near half → take it immediately
+
     if cheapest['route_mile'] <= near_half_cutoff:
         return cheapest
 
-    # Cheapest is in far half — check if near-half has something close in price
+    
     near_stations = [s for s in reachable_stations if s['route_mile'] <= near_half_cutoff]
 
     if near_stations:
@@ -221,11 +214,11 @@ def _select_best_stop(
         price_diff_fraction = (cheapest_near['price'] - cheapest['price']) / cheapest['price']
 
         if price_diff_fraction <= lookahead_threshold:
-            # Near station is within 8% of cheapest → take it, save fuel margin
+            
             return cheapest_near
         else:
-            # Far station is significantly cheaper → aim for it
+            
             return cheapest
 
-    # No near stations — take cheapest before safety cutoff
+    
     return cheapest_before_safety

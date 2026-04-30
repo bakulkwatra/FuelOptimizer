@@ -55,11 +55,7 @@ _CITY_DB_LOADED = False
 
 
 def _load_city_db():
-    """
-    Download a lightweight US cities CSV from a public source once,
-    cache it in memory. ~30k rows, loads in < 1 second.
-    Falls back to state centroid if city not found.
-    """
+    
     global _CITY_COORDS, _CITY_DB_LOADED
     if _CITY_DB_LOADED:
         return
@@ -144,10 +140,7 @@ _STATIONS: Optional[List[Dict]] = None
 
 
 def load_stations() -> List[Dict]:
-    """
-    Load CSV once, geocode each station via city lookup (no API calls),
-    deduplicate by keeping the cheapest price per physical location.
-    """
+
     global _STATIONS
     if _STATIONS is not None:
         return _STATIONS

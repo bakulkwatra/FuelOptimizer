@@ -6,7 +6,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0YmIxOTY3M2U3ZjQ0ZTdhNGM0M2FiOTIyZjRkM2YyIiwiaCI6Im11cm11cjY0In0='
+SECRET_KEY = "add key here"
+# 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0YmIxOTY3M2U3ZjQ0ZTdhNGM0M2FiOTIyZjRkM2YyIiwiaCI6Im11cm11cjY0In0='
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
@@ -71,9 +72,26 @@ STATIC_URL = '/static/'
 
 VEHICLE_RANGE_MILES = 500
 VEHICLE_MPG = 10
-ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0YmIxOTY3M2U3ZjQ0ZTdhNGM0M2FiOTIyZjRkM2YyIiwiaCI6Im11cm11cjY0In0='
+ORS_API_KEY = "add key here same as above"
+# 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM0YmIxOTY3M2U3ZjQ0ZTdhNGM0M2FiOTIyZjRkM2YyIiwiaCI6Im11cm11cjY0In0='
 STATION_CORRIDOR_MILES = 300
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'api': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
 
 

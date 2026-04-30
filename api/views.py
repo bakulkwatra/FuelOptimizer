@@ -24,13 +24,24 @@ def plan_route(request):
     if start.lower() == end.lower():
         return Response({'error': 'Start and end cannot be the same.'}, status=400)
 
+   
+    import hashlib
+    from django.core.cache import cache
+    response_cache_key = f"full_response:{hashlib.md5(f'{start.lower()}:{end.lower()}'.encode()).hexdigest()}"
+    cached_response = cache.get(response_cache_key)
+    if cached_response:
+        logger.info(f"Full response cache HIT: {start} → {end}")
+        cached_response['meta']['computation_seconds'] = round(time.time() - start_time, 3)
+        cached_response['meta']['cache_hit'] = True
+        return Response(cached_response)
+
     try:
         route_data = get_route(start, end)
     except (ConnectionError, ValueError) as e:
         return Response({'error': f'Route error: {str(e)}'}, status=503)
 
     all_stations = load_stations()
-    corridor = getattr(settings, 'STATION_CORRIDOR_MILES', 50)
+    corridor = getattr(settings, 'STATION_CORRIDOR_MILES', 300)
     nearby = stations_near_route(route_data['coordinates'], corridor, all_stations)
 
     if not nearby:
@@ -46,7 +57,7 @@ def plan_route(request):
     except ValueError as e:
         return Response({'error': str(e)}, status=422)
 
-    return Response({
+    response_data = {
         'query': {'start': start, 'end': end},
         'route': {
             'distance_miles': route_data['distance_miles'],
@@ -61,9 +72,12 @@ def plan_route(request):
             'vehicle_mpg': settings.VEHICLE_MPG,
             'stations_in_corridor': len(nearby),
             'computation_seconds': round(time.time() - start_time, 3),
+            'cache_hit': False,
         },
-    })
+    }
 
+    cache.set(response_cache_key, response_data, timeout=3600)
+    return Response(response_data)
 
 @api_view(['GET'])
 def health_check(request):
